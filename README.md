@@ -4,232 +4,302 @@
 
 ## 📋 项目介绍
 
-本项目模拟企业充电业务场景下的 AI Agent 助手，展示了以下核心能力：
+本项目模拟企业充电业务场景下的 AI Agent
+助手，展示大模型应用开发中的核心能力：
 
-- **RAG 知识库问答**：文档上传、解析、向量化、检索、生成回答
-- **Multi-Agent 系统**：基于 LangGraph 实现多 Agent 协作工作流
-- **NL-to-SQL**：自然语言转 SQL 查询数据库
-- **对话式交互**：通过 Streamlit 前端进行友好的聊天交互
+-   **RAG 知识库问答**：文档上传、解析、向量化、检索、生成回答
+-   **Multi-Agent 系统**：基于 LangGraph 实现多 Agent 协作工作流
+-   **NL-to-SQL**：自然语言转 SQL 查询业务数据库
+-   **Agent 路由机制**：根据用户意图自动选择不同 Agent
+-   **对话式交互**：通过 Streamlit 前端完成智能聊天
+
+## ✨ 项目亮点
+
+### 🤖 Multi-Agent Workflow
+
+基于 LangGraph 构建 Agent 工作流：
+
+``` text
+用户输入
+
+↓
+
+Router Agent
+
+↓
+
+Knowledge Agent / Data Agent / Chat Agent
+
+↓
+
+RAG检索 / SQL查询 / LLM对话
+
+↓
+
+最终回答
+```
+
+### 📚 RAG Pipeline
+
+完整实现：
+
+``` text
+文档上传
+    ↓
+文档解析
+    ↓
+文本切片
+    ↓
+Embedding
+    ↓
+FAISS向量检索
+    ↓
+上下文增强
+    ↓
+LLM生成回答
+```
+
+### 📊 NL-to-SQL
+
+支持自然语言查询业务数据库：
+
+示例：
+
+    北京有多少个充电站？
+    最近一个月充电订单是多少？
+
+流程：
+
+``` text
+用户问题
+
+↓
+
+Data Agent
+
+↓
+
+SQL生成
+
+↓
+
+SQLite查询
+
+↓
+
+结果分析
+```
 
 ## 🏗️ 技术架构
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Streamlit 前端                           │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐            │
-│  │  聊天窗口     │ │ 历史记录     │ │ 文件上传     │            │
-│  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘            │
-└─────────│────────────────│────────────────│─────────────────────┘
-          │                │                │
-          ▼                ▼                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        FastAPI 后端                             │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │                    POST /chat                              │  │
-│  │  session_id + message → Router Agent → Answer             │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │                    POST /upload                            │  │
-│  │  file → PDF解析 → 文本切片 → Embedding → FAISS             │  │
-│  └───────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-          │
-          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        LangGraph Multi-Agent                    │
-│                                                                 │
-│   START → Router Agent → [知识问答/数据分析/普通聊天] → END      │
-│                                                                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
-│  │ Router Agent│  │Knowledge    │  │ Data Agent  │             │
-│  │ 问题分类    │  │Agent        │  │ NL→SQL      │             │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘             │
-│         │                │                │                     │
-│         ▼                ▼                ▼                     │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │                    Shared State                         │    │
-│  │  messages, query_type, retrieved_docs, sql_result,      │    │
-│  │  answer, agent_name, source                             │    │
-│  └─────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────┘
-          │                │                │
-          ▼                ▼                ▼
-┌───────────────┐ ┌───────────────┐ ┌───────────────┐
-│   SQLite      │ │   FAISS       │ │   LLM API     │
-│   充电订单     │ │   向量存储     │ │   OpenAI      │
-│   充电站       │ │   (知识文档)   │ │               │
-│   用户记录     │ │               │ │               │
-└───────────────┘ └───────────────┘ └───────────────┘
+``` text
+Streamlit 前端
+
+        ↓
+
+FastAPI 后端
+
+        ↓
+
+LangGraph Multi-Agent
+
+        ↓
+
+Router Agent
+
+        ↓
+
+Knowledge Agent / Data Agent / Chat Agent
+
+        ↓
+
+FAISS / SQLite / LLM API
 ```
 
 ## 🤖 Agent 流程图
 
-```
+``` text
 用户提问
-    │
-    ▼
-┌─────────────┐
-│ Router Agent│  判断问题类型
-└──────┬──────┘
-       │
-       ├── knowledge ──▶ ┌─────────────────┐
-       │                  │ Knowledge Agent │ ──▶ RAG检索 + LLM回答
-       │                  └─────────────────┘
-       │
-       ├── data ──────▶ ┌─────────────────┐
-       │                  │   Data Agent    │ ──▶ NL→SQL + 数据库查询
-       │                  └─────────────────┘
-       │
-       └── chat ──────▶ ┌─────────────────┐
-                         │   Chat Agent    │ ──▶ 直接LLM回答
-                         └─────────────────┘
+
+↓
+
+Router Agent 判断问题类型
+
+↓
+
+knowledge
+    ↓
+Knowledge Agent
+    ↓
+RAG检索 + LLM回答
+
+
+data
+    ↓
+Data Agent
+    ↓
+NL2SQL + 数据库查询
+
+
+chat
+    ↓
+Chat Agent
+    ↓
+LLM回复
 ```
 
 ## 📚 RAG 流程说明
 
-```
+``` text
 文档上传
-    │
-    ▼
-文档解析 (PDF/TXT/Markdown)
-    │
-    ▼
-文本切片 (RecursiveCharacterTextSplitter)
-    │
-    ▼
-Embedding (OpenAI text-embedding-3-small)
-    │
-    ▼
-FAISS 向量存储
-    │
-    ▼
+
+↓
+
+PDF/TXT/Markdown解析
+
+↓
+
+文本切片
+
+↓
+
+Embedding
+
+↓
+
+FAISS向量存储
+
+↓
+
 用户提问
-    │
-    ▼
-向量检索 (Top-K)
-    │
-    ▼
+
+↓
+
+Top-K检索
+
+↓
+
 上下文注入
-    │
-    ▼
-LLM 生成回答
-    │
-    ▼
-返回答案 + 引用来源
+
+↓
+
+LLM生成回答
 ```
 
 ## 🛠️ 技术栈
 
-- **Python 3.11**
-- **FastAPI** - 后端 API 框架
-- **LangChain** - LLM 应用开发框架
-- **LangGraph** - 多 Agent 工作流编排
-- **FAISS** - 向量数据库
-- **SQLite** - 关系型数据库
-- **Streamlit** - 前端交互界面
-- **OpenAI API** - LLM 和 Embedding
+-   Python 3.11
+-   FastAPI
+-   LangChain
+-   LangGraph
+-   FAISS
+-   SQLite
+-   Streamlit
+-   OpenAI API
+-   Embedding Model
 
 ## 📂 项目结构
 
-```
+``` text
 charging-ai-agent-demo/
+
 ├── backend/
-│   ├── main.py                      # FastAPI 入口
+│   ├── main.py
 │   ├── agents/
-│   │   ├── router.py                # Router Agent - 问题分类
-│   │   ├── knowledge.py             # Knowledge Agent - RAG回答
-│   │   ├── data.py                  # Data Agent - NL→SQL
-│   │   ├── chat.py                  # Chat Agent - 普通聊天
-│   │   └── graph.py                 # LangGraph StateGraph 编排
+│   │   ├── router.py
+│   │   ├── knowledge.py
+│   │   ├── data.py
+│   │   ├── chat.py
+│   │   └── graph.py
 │   ├── rag/
-│   │   ├── loader.py                # PDF/TXT/MD 文档加载
-│   │   ├── splitter.py              # 文本切片
-│   │   ├── embedding.py             # Embedding 向量化
-│   │   ├── vector_store.py          # FAISS 向量存储
-│   │   └── retriever.py             # 检索器封装
-│   ├── tools/
-│   ├── database/
-│   │   ├── schema.py                # 表结构定义
-│   │   ├── mock_data.py             # 模拟数据
-│   │   └── connection.py            # 数据库连接
-│   └── config/
-│       └── settings.py              # 配置管理
+│   │   ├── loader.py
+│   │   ├── splitter.py
+│   │   ├── embedding.py
+│   │   ├── vector_store.py
+│   │   └── retriever.py
+│   └── database/
+│
 ├── frontend/
-│   └── app.py                       # Streamlit 前端
+│   └── app.py
+│
 ├── knowledge/
-│   └── charging_faq.md              # 示例知识文档
-├── .env.example                     # 环境变量示例
-├── requirements.txt                 # 依赖清单
-└── README.md                        # 项目说明
+│
+├── requirements.txt
+└── README.md
 ```
 
 ## 🚀 启动方式
 
-### 1. 安装依赖
+### 安装依赖
 
-```bash
+``` bash
 cd charging-ai-agent-demo
+
 uv venv
+
 .venv\Scripts\activate
+
 pip install -r requirements.txt
 ```
 
-### 2. 配置环境变量
+### 配置环境变量
 
-```bash
+复制：
+
+``` bash
 cp .env.example .env
 ```
 
-编辑 `.env` 文件，填入你的 OpenAI API Key：
+配置：
 
-```
+``` env
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_API_BASE=https://api.openai.com/v1
 OPENAI_MODEL=gpt-4o-mini
 ```
 
-### 3. 启动后端服务
+### 启动后端
 
-```bash
-cd charging-ai-agent-demo
-.venv\Scripts\activate
+``` bash
 python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ```
 
-### 4. 启动前端界面
+### 启动前端
 
-打开新的终端：
-
-```bash
-cd charging-ai-agent-demo
-.venv\Scripts\activate
+``` bash
 streamlit run frontend/app.py
 ```
 
-### 5. 访问应用
+访问：
 
-打开浏览器访问 `http://localhost:8501`
+    http://localhost:8501
 
 ## 📝 功能测试
 
-### Knowledge Agent 测试
-```
-问题：充电费用如何计算？
-期望：返回充电费用计算公式和组成部分
-```
+### Knowledge Agent
 
-### Data Agent 测试
-```
-问题：北京有多少个充电站？
-期望：查询数据库并返回统计结果
-```
+问题：
 
-### Chat Agent 测试
-```
-问题：你好，今天天气怎么样？
-期望：友好的聊天回复
-```
+    充电费用如何计算？
+
+返回知识库相关答案。
+
+### Data Agent
+
+问题：
+
+    北京有多少个充电站？
+
+查询数据库并返回结果。
+
+### Chat Agent
+
+问题：
+
+    你好
+
+返回普通对话回复。
 
 ## 📬 联系方式
 
-如有问题或建议，欢迎提交 Issue 或 Pull Request。
+欢迎交流 AI Agent、RAG 和 LLM 应用开发。
