@@ -28,9 +28,10 @@ answer_chain = answer_prompt | llm | StrOutputParser()
 
 def query_with_sql(question: str) -> tuple[str, str]:
     try:
-        sql_query = query_chain.invoke({"question": question})
-        
-        if not sql_query.strip().upper().startswith("SELECT"):
+        sql_query = query_chain.invoke({"question": question}).strip()
+        sql_query = sql_query.removeprefix("SQLQuery:").strip().rstrip(";").strip()
+
+        if not sql_query.upper().startswith("SELECT ") or ";" in sql_query:
             return "抱歉，为了安全考虑，我只能执行查询操作。", "SQL查询被拒绝"
         
         result = db.run(sql_query)

@@ -1,10 +1,11 @@
 fastapi
 uvicorn
-langchain
-langchain-core
-langchain-openai
-langchain-text-splitters
-langgraph
+langchain>=0.2,<0.3
+langchain-core>=0.2,<0.3
+langchain-openai>=0.1,<0.2
+langchain-community>=0.2,<0.3
+langchain-text-splitters>=0.2,<0.3
+langgraph>=0.1,<0.2
 langgraph-checkpoint
 faiss-cpu
 streamlit
@@ -12,7 +13,9 @@ pydantic
 pydantic-settings
 sqlalchemy
 pandas
+requests
 python-dotenv
+python-multipart
 PyPDF2
 markdown
 tiktoken

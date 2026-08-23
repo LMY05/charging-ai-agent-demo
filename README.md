@@ -1,305 +1,195 @@
 # ⚡ Charging AI Agent Demo
 
-基于 LangGraph 和 RAG 的充电业务场景 AI Agent 助手演示项目。
+基于 **LangGraph + RAG + NL-to-SQL** 的充电业务智能助手。项目使用 FastAPI 提供 API、Streamlit 提供聊天界面，并通过 Router Agent 将问题分发给知识问答、数据分析或通用对话 Agent。
 
-## 📋 项目介绍
+<p align="center">
+  <img src="screenshots/04-data-agent.png" alt="Charging AI Agent 数据查询演示" width="900" />
+</p>
 
-本项目模拟企业充电业务场景下的 AI Agent
-助手，展示大模型应用开发中的核心能力：
+## 核心能力
 
--   **RAG 知识库问答**：文档上传、解析、向量化、检索、生成回答
--   **Multi-Agent 系统**：基于 LangGraph 实现多 Agent 协作工作流
--   **NL-to-SQL**：自然语言转 SQL 查询业务数据库
--   **Agent 路由机制**：根据用户意图自动选择不同 Agent
--   **对话式交互**：通过 Streamlit 前端完成智能聊天
+| 能力 | 说明 |
+| --- | --- |
+| Multi-Agent 路由 | LangGraph 根据问题类型选择 Knowledge、Data 或 Chat Agent |
+| RAG 知识问答 | 文档解析、切片、Embedding、FAISS 检索、引用来源返回 |
+| NL-to-SQL | 将自然语言转换为只读 SQL，查询 SQLite 充电业务数据 |
+| 文档上传 | 支持 PDF、TXT、Markdown 文档并写入向量库 |
+| Web 交互 | Streamlit 聊天界面、会话记录、Agent 标识和来源展示 |
+| REST API | FastAPI 提供聊天、上传接口及 Swagger 文档 |
 
-## ✨ 项目亮点
+## 项目亮点
 
-### 🤖 Multi-Agent Workflow
+- **Multi-Agent Workflow**：Router Agent 自动识别用户意图，再选择专业 Agent。
+- **完整 RAG Pipeline**：覆盖上传、解析、切片、Embedding、Top-K 检索和回答生成。
+- **可解释 NL-to-SQL**：返回查询结论及实际 SQL，并限制为只读查询。
+- **完整应用链路**：前端、API、Agent 编排、向量库和业务数据库均可独立扩展。
 
-基于 LangGraph 构建 Agent 工作流：
+## 系统架构
 
-``` text
-用户输入
-
-↓
-
-Router Agent
-
-↓
-
-Knowledge Agent / Data Agent / Chat Agent
-
-↓
-
-RAG检索 / SQL查询 / LLM对话
-
-↓
-
-最终回答
+```mermaid
+flowchart LR
+    U[用户] --> UI[Streamlit 前端]
+    UI --> API[FastAPI API]
+    API --> R[Router Agent]
+    R -->|knowledge| K[Knowledge Agent]
+    R -->|data| D[Data Agent]
+    R -->|chat| C[Chat Agent]
+    K --> V[(FAISS)]
+    D --> S[(SQLite)]
+    K --> L[OpenAI 兼容 API]
+    D --> L
+    C --> L
 ```
 
-### 📚 RAG Pipeline
+### Agent 分工
 
-完整实现：
+- **Router Agent**：识别 `knowledge`、`data`、`chat` 三类意图。
+- **Knowledge Agent**：检索知识库上下文，生成带来源的业务回答。
+- **Data Agent**：生成并执行只读 SQL，再将结果整理为自然语言。
+- **Chat Agent**：处理普通聊天和非业务问题。
 
-``` text
-文档上传
-    ↓
-文档解析
-    ↓
-文本切片
-    ↓
-Embedding
-    ↓
-FAISS向量检索
-    ↓
-上下文增强
-    ↓
-LLM生成回答
-```
+## 运行截图
 
-### 📊 NL-to-SQL
+### 应用首页
 
-支持自然语言查询业务数据库：
+![Streamlit 应用首页](screenshots/01-home.png)
 
-示例：
+### 真实 AI 对话
 
-    北京有多少个充电站？
-    最近一个月充电订单是多少？
+![Chat Agent 对话结果](screenshots/02-chat.png)
 
-流程：
+### NL-to-SQL 数据查询
 
-``` text
-用户问题
+![Data Agent 查询结果与 SQL 来源](screenshots/04-data-agent.png)
 
-↓
+### FastAPI 接口文档
 
-Data Agent
+![FastAPI Swagger 文档](screenshots/03-api-docs.png)
 
-↓
+## 快速开始
 
-SQL生成
+### 环境要求
 
-↓
+- Python 3.11
+- Windows 10/11，或可运行 Python 的 macOS / Linux
+- OpenAI 兼容 API Key
 
-SQLite查询
+### Windows 一键启动
 
-↓
-
-结果分析
-```
-
-## 🏗️ 技术架构
-
-``` text
-Streamlit 前端
-
-        ↓
-
-FastAPI 后端
-
-        ↓
-
-LangGraph Multi-Agent
-
-        ↓
-
-Router Agent
-
-        ↓
-
-Knowledge Agent / Data Agent / Chat Agent
-
-        ↓
-
-FAISS / SQLite / LLM API
-```
-
-## 🤖 Agent 流程图
-
-``` text
-用户提问
-
-↓
-
-Router Agent 判断问题类型
-
-↓
-
-knowledge
-    ↓
-Knowledge Agent
-    ↓
-RAG检索 + LLM回答
-
-
-data
-    ↓
-Data Agent
-    ↓
-NL2SQL + 数据库查询
-
-
-chat
-    ↓
-Chat Agent
-    ↓
-LLM回复
-```
-
-## 📚 RAG 流程说明
-
-``` text
-文档上传
-
-↓
-
-PDF/TXT/Markdown解析
-
-↓
-
-文本切片
-
-↓
-
-Embedding
-
-↓
-
-FAISS向量存储
-
-↓
-
-用户提问
-
-↓
-
-Top-K检索
-
-↓
-
-上下文注入
-
-↓
-
-LLM生成回答
-```
-
-## 🛠️ 技术栈
-
--   Python 3.11
--   FastAPI
--   LangChain
--   LangGraph
--   FAISS
--   SQLite
--   Streamlit
--   OpenAI API
--   Embedding Model
-
-## 📂 项目结构
-
-``` text
-charging-ai-agent-demo/
-
-├── backend/
-│   ├── main.py
-│   ├── agents/
-│   │   ├── router.py
-│   │   ├── knowledge.py
-│   │   ├── data.py
-│   │   ├── chat.py
-│   │   └── graph.py
-│   ├── rag/
-│   │   ├── loader.py
-│   │   ├── splitter.py
-│   │   ├── embedding.py
-│   │   ├── vector_store.py
-│   │   └── retriever.py
-│   └── database/
-│
-├── frontend/
-│   └── app.py
-│
-├── knowledge/
-│
-├── requirements.txt
-└── README.md
-```
-
-## 🚀 启动方式
-
-### 安装依赖
-
-``` bash
+```bat
+git clone https://github.com/LMY05/charging-ai-agent-demo.git
 cd charging-ai-agent-demo
+init.bat
+copy .env.example .env
+```
 
-uv venv
+编辑 `.env` 后启动：
 
-.venv\Scripts\activate
+```bat
+start.bat
+```
 
+访问地址：
+
+- Web 界面：<http://localhost:8501>
+- API 文档：<http://localhost:8000/docs>
+- API 根地址：<http://localhost:8000>
+
+### 手动启动
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
 
-### 配置环境变量
+新开终端：
 
-复制：
-
-``` bash
-cp .env.example .env
+```powershell
+.\.venv\Scripts\Activate.ps1
+streamlit run frontend/app.py --server.port 8501
 ```
 
-配置：
+macOS / Linux 请将激活命令替换为：
 
-``` env
-OPENAI_API_KEY=your_openai_api_key
+```bash
+source .venv/bin/activate
+```
+
+## 环境变量
+
+复制 `.env.example` 为 `.env`，不要提交真实密钥。
+
+```dotenv
+OPENAI_API_KEY=your_api_key
 OPENAI_API_BASE=https://api.openai.com/v1
 OPENAI_MODEL=gpt-4o-mini
 ```
 
-### 启动后端
+DeepSeek 聊天模型示例：
 
-``` bash
-python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
+```dotenv
+OPENAI_API_KEY=your_deepseek_api_key
+OPENAI_API_BASE=https://api.deepseek.com/v1
+OPENAI_MODEL=deepseek-chat
 ```
 
-### 启动前端
+> DeepSeek 标准接口目前可用于 Router、Chat 和 Data Agent，但不提供本项目默认使用的 `text-embedding-3-small`。完整启用 Knowledge Agent 时，需使用支持 OpenAI Embeddings API 的服务。
 
-``` bash
-streamlit run frontend/app.py
+## API
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| `GET` | `/` | 服务状态 |
+| `POST` | `/chat` | 提交问题并返回答案、Agent 和来源 |
+| `POST` | `/upload` | 上传知识文档并写入向量库 |
+
+聊天请求示例：
+
+```bash
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"北京有多少个充电站？","session_id":"demo-user"}'
 ```
 
-访问：
+## 推荐体验问题
 
-    http://localhost:8501
+```text
+Knowledge Agent：充电费用如何计算？
+Data Agent：北京有多少个充电站？
+Data Agent：最近一个月有多少充电订单？
+Chat Agent：你好，请用一句话介绍这个系统。
+```
 
-## 📝 功能测试
+## 项目结构
 
-### Knowledge Agent
+```text
+charging-ai-agent-demo/
+├── backend/
+│   ├── agents/          # Router、Knowledge、Data、Chat 与 LangGraph
+│   ├── config/          # 环境配置
+│   ├── database/        # SQLite 表结构、连接和模拟数据
+│   ├── rag/             # 文档加载、切片、Embedding、FAISS 检索
+│   └── main.py          # FastAPI 入口
+├── frontend/app.py      # Streamlit 前端
+├── knowledge/           # 示例知识文档
+├── screenshots/         # README 运行截图
+├── init.bat             # Windows 环境初始化
+├── start.bat            # Windows 一键启动
+└── requirements.txt
+```
 
-问题：
+## 技术栈
 
-    充电费用如何计算？
+`Python 3.11` · `FastAPI` · `Streamlit` · `LangChain` · `LangGraph` · `FAISS` · `SQLite` · `SQLAlchemy`
 
-返回知识库相关答案。
+## 安全说明
 
-### Data Agent
+- `.env` 已被 `.gitignore` 排除；提交前仍请检查暂存文件。
+- Data Agent 仅允许执行单条 `SELECT` 查询。
+- 演示项目默认开放 CORS；生产部署前应限制来源并增加鉴权、限流和输入校验。
 
-问题：
+## 参与贡献
 
-    北京有多少个充电站？
-
-查询数据库并返回结果。
-
-### Chat Agent
-
-问题：
-
-    你好
-
-返回普通对话回复。
-
-## 📬 联系方式
-
-欢迎交流 AI Agent、RAG 和 LLM 应用开发。
+欢迎通过 [Issue](https://github.com/LMY05/charging-ai-agent-demo/issues) 或 Pull Request 提交建议与改进。

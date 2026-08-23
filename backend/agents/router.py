@@ -32,6 +32,7 @@ chain = prompt | llm | parser
 def classify_query(query: str) -> str:
     try:
         result = chain.invoke({"input": query, "format_instructions": parser.get_format_instructions()})
-        return result.query_type
-    except Exception as e:
+        query_type = result["query_type"]
+        return query_type if query_type in {"knowledge", "data", "chat"} else "chat"
+    except Exception:
         return "chat"

@@ -30,6 +30,9 @@ def generate_users(db: Session):
     db.commit()
 
 def generate_orders(db: Session):
+    if db.query(ChargingOrder.id).first():
+        return
+
     stations = db.query(ChargingStation).all()
     users = db.query(UserRecord).all()
     

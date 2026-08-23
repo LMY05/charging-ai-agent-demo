@@ -15,14 +15,13 @@ class AgentState(TypedDict):
     agent_name: str
     source: str
 
-def route_query(state: AgentState) -> str:
+def route_query(state: AgentState) -> dict:
     last_message = state["messages"][-1]
     if isinstance(last_message, HumanMessage):
         query = last_message.content
         query_type = classify_query(query)
-        state["query_type"] = query_type
-        return query_type
-    return "chat"
+        return {"query_type": query_type}
+    return {"query_type": "chat"}
 
 def knowledge_agent(state: AgentState) -> AgentState:
     last_message = state["messages"][-1]
